@@ -1,0 +1,62 @@
+create schema dbt_raw.landing_zone;
+
+
+create or replace storage integration s3_int
+    storage_provider = 's3'
+    type = external_stage
+    enabled = true
+    storage_allowed_locations = ('s3://stock-market-streaming-data-dbt-snowflake-7428')
+    storage_aws_role_arn = 'arn:aws:iam::******:role/snowflake-dbt-prj';
+
+desc integration s3_int;
+
+create or replace stage s3_stg
+    storage_integration = s3_int
+    url = 's3://stock-market-streaming-data-dbt-snowflake-7428/2026/07/15/02/'
+    file_format = (type = csv field_delimiter = ',' skip_header = 1);
+
+list @s3_stg; 
+
+
+CREATE OR REPLACE EXTERNAL TABLE DBT_RAW.LANDING_ZONE.INTRADAY_STREAMING
+(
+    SYMBOL VARCHAR AS (REPLACE(SPLIT_PART(VALUE:c1,':',2),'"','')::VARCHAR),
+    TIMESTAMP VARCHAR AS (REPLACE(SPLIT_PART(VALUE:c2,':',2),'"','')::VARCHAR),
+    OPEN VARCHAR AS (REPLACE(SPLIT_PART(VALUE:c3,':',2),'"','')::VARCHAR),
+	HIGH VARCHAR AS (REPLACE(SPLIT_PART(VALUE:c4,':',2),'"','')::VARCHAR),
+    LOW VARCHAR AS (REPLACE(SPLIT_PART(VALUE:c5,':',2),'"','')::VARCHAR),
+    CLOSE VARCHAR AS (REPLACE(SPLIT_PART(VALUE:c6,':',2),'"','')::VARCHAR),
+	VOLUME VARCHAR AS (REPLACE(REPLACE(SPLIT_PART(VALUE:c7,':',2),'"',''),'}','')::VARCHAR)	
+)
+LOCATION = @DBT_RAW.LANDING_ZONE.s3_stg
+FILE_FORMAT = (TYPE = CSV)
+
+select * from DBT_RAW.LANDING_ZONE.INTRADAY_STREAMING;
+
+
+CREATE OR REPLACE EXTERNAL TABLE DBT_RAW.LANDING_ZONE.INTRADAY_STREAMING
+
+
+
+create or replace stage s3_batch
+    storage_integration = s3_int
+    url = 's3://stock-market-streaming-data-dbt-snowflake-7428/batch/'
+    file_format = (type = csv field_delimiter = ',' skip_header = 1);
+
+CREATE OR REPLACE EXTERNAL TABLE DBT_RAW.LANDING_ZONE.BATCH_DATA_STOCKS
+(
+    DATE VARCHAR AS (VALUE:c1::VARCHAR),
+    TICKER VARCHAR AS (VALUE:c2::VARCHAR),
+    OPEN VARCHAR AS (VALUE:c3::VARCHAR),
+    HIGH VARCHAR AS (VALUE:c4::VARCHAR),
+    LOW VARCHAR AS (VALUE:c5::VARCHAR),
+    CLOSE VARCHAR AS (VALUE:c6::VARCHAR),
+    VOLUME VARCHAR AS (VALUE:c7::VARCHAR) 
+)
+LOCATION = @DBT_RAW.LANDING_ZONE.s3_batch
+FILE_FORMAT = (TYPE = CSV,SKIP_HEADER=1);
+    
+
+select * from DBT_RAW.LANDING_ZONE.BATCH_DATA_STOCKS;
+
+
