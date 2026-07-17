@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+    - name: snowflake_source
+      database: DBT_RAW
+      schema: LANDING_ZONE
+      tables:
+        - name: INTRADAY_STREAMING
+        - name: BATCH_DATA_STOCKS

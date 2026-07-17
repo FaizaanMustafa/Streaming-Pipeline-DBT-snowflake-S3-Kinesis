@@ -1,0 +1,13 @@
+streaming_project_dbt:
+  outputs:
+    dev:
+      account: ABTTJCT-CFB98049
+      database: DBT_RAW
+      password: Faizaan7786367428
+      role: ACCOUNTADMIN
+      schema: LANDING_ZONE
+      threads: 1
+      type: snowflake
+      user: FAIZAAN1245
+      warehouse: COMPUTE_WH
+  target: dev
